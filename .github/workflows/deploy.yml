@@ -24,6 +24,11 @@ jobs:
       - name: Build
         run: hugo --minify
 
+      - name: Setup SSH known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
       - name: Deploy to server
         uses: easingthemes/ssh-deploy@v5.1.0
         env:
