@@ -9,12 +9,12 @@ layout: "page"
 
 你好，欢迎来到我的博客！👋
 
-我是 [你的名字 / 昵称]，一名软件开发者。这里是我记录技术学习、生活思考和读书笔记的地方。
+我是 ASWZ，一名软件开发者。这里是我记录技术学习、生活思考和读书笔记的地方。
 
 ## 联系方式
 
 - GitHub: [@aswz123](https://github.com/aswz123)
-- Email: [你的邮箱]
+- Email: zhangjunchao915@gmail.com
 
 ## 关于本站
 
