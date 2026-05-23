@@ -1,5 +1,6 @@
 baseURL: "http://122.51.94.127/"
 locale: "zh-cn"
+hasCJKLanguage: true
 title: "我的博客"
 theme: "PaperMod"
 
@@ -32,6 +33,11 @@ params:
   ShowWordCount: true
   ShowBreadCrumbs: true
   ShowPostNavLinks: true
+  ShowCodeCopyButtons: true
+  defaultTheme: "auto"
+
+  assets:
+    disableHLJS: true
 
   # 搜索
   fuseOpts:
@@ -40,7 +46,7 @@ params:
     location: 0
     distance: 1000
     threshold: 0.4
-    minMatchCharLength: 0
+    minMatchCharLength: 1
     keys:
       - "title"
       - "content"
