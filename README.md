@@ -1,6 +1,6 @@
 # 我的博客
 
-基于 Hugo + PaperMod 的个人博客。**在线地址：[http://122.51.94.127](http://122.51.94.127)**
+基于 Hugo + PaperMod 的个人博客。**在线地址：[https://aswzblog.me](https://aswzblog.me)**
 
 ---
 
@@ -34,7 +34,32 @@ cd blog-source
 
 ---
 
-## 写文章
+## 管理后台（在线写作）
+
+项目集成了 [Sveltia CMS](https://sveltiacms.app/)（Decap CMS 社区分支），可以直接在浏览器里写文章，像 WordPress 一样。
+
+访问 **[https://aswzblog.me/admin/](https://aswzblog.me/admin/)** 进入后台。
+
+### 登录
+
+需要一个 GitHub Personal Access Token（Classic）：
+
+1. 打开 https://github.com/settings/tokens/new
+2. Note 填 `Blog CMS`，勾选 **`repo`** scope
+3. 生成后复制 token，在后台登录页面输入即可
+
+### 使用
+
+- **写文章**：点击"文章"→"新建文章"，编辑好内容后点"保存"→"发布"
+- **上传图片**：编辑器支持直接粘贴或拖拽图片
+- **编辑"关于我"**：在"页面"→"关于我"里直接改
+- 保存后会自动 commit 到 GitHub，约 30 秒部署上线
+
+> 如果文章不想发布，在后台把"草稿"开关打开，保存后只会存在仓库里，不会出现在网站上。
+
+---
+
+## 本地写作
 
 ### 创建新文章
 
@@ -123,7 +148,9 @@ git commit -m "新文章: Go 语言并发编程入门"
 git push origin main
 ```
 
-推送后 **约 30 秒**自动部署到 http://122.51.94.127。
+推送后 **约 30 秒**自动部署到 https://aswzblog.me。
+
+> 如果使用管理后台写作，保存后自动完成 commit + push，无需手动操作。
 
 ---
 
@@ -152,8 +179,11 @@ blog-source/
 │   │   └── hello-world.md
 │   ├── about.md        # ← 关于我页面
 │   └── search.md       # ← 搜索页面（不要删）
-├── static/             # ← 图片等静态文件
-│   └── images/
+├── static/
+│   ├── admin/           # ← 管理后台（Sveltia CMS）
+│   │   ├── index.html
+│   │   └── config.yml
+│   └── images/          # ← 图片等静态文件
 ├── archetypes/
 │   └── default.md      # ← 新文章的默认模板
 ├── themes/
