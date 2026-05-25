@@ -11,6 +11,13 @@ paginate: 10
 enableRobotsTXT: true
 enableEmoji: true
 
+# 输出格式（搜索需要 JSON 索引）
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
 # 语法高亮
 markup:
   highlight:
