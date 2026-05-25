@@ -1,0 +1,1268 @@
+/* ============================================================
+   SPACE CABIN HUD — 太空舱抬头显示器
+   设计系统: OLED Dark Mode + 任务控制台仪表盘
+   字体: Noto Sans SC (正文/标题) + JetBrains Mono (代码/数据)
+   色系: 纯黑 #000 + 金 #c9a84c + 青蓝 #38bdf8 + 警报红 #ff4747
+   ============================================================ */
+
+/* ---- 字体: 全系统原生字体，无需外部加载 ---- */
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+    --gap: 24px;
+    --content-gap: 20px;
+    --nav-width: 1100px;
+    --main-width: 780px;
+    --header-height: 56px;
+    --footer-height: 60px;
+    --radius: 0px;
+
+    --theme: #000000;
+    --entry: rgba(255, 255, 255, 0.012);
+    --primary: #e8e8e8;
+    --secondary: #7a7a7a;
+    --tertiary: rgba(255, 255, 255, 0.025);
+    --content: #c8c8c8;
+    --code-block-bg: #020202;
+    --code-bg: rgba(201, 168, 76, 0.04);
+    --border: rgba(255, 255, 255, 0.10);
+
+    --accent: #c9a84c;
+    --accent-glow: rgba(201, 168, 76, 0.30);
+    --accent-bg: rgba(201, 168, 76, 0.04);
+    --cyan: #38bdf8;
+    --cyan-glow: rgba(56, 189, 248, 0.25);
+    --cyan-bg: rgba(56, 189, 248, 0.04);
+    --alert: #ff4747;
+    --alert-glow: rgba(255, 71, 71, 0.20);
+
+    color-scheme: dark;
+}
+
+:root[data-theme="dark"] {
+    --theme: #000000;
+    --entry: rgba(255, 255, 255, 0.012);
+    --primary: #e8e8e8;
+    --secondary: #7a7a7a;
+    --tertiary: rgba(255, 255, 255, 0.025);
+    --content: #c8c8c8;
+    --code-block-bg: #020202;
+    --code-bg: rgba(201, 168, 76, 0.04);
+    --border: rgba(255, 255, 255, 0.10);
+    --accent: #c9a84c;
+    --accent-glow: rgba(201, 168, 76, 0.30);
+    --accent-bg: rgba(201, 168, 76, 0.04);
+    --cyan: #38bdf8;
+    --cyan-glow: rgba(56, 189, 248, 0.25);
+    color-scheme: dark;
+}
+
+/* ============================================================
+   BASE — 深空背景 + 精密点阵 + 光晕
+   ============================================================ */
+body {
+    background-color: #000;
+    background-image:
+        radial-gradient(ellipse 100% 60% at 50% -30%, rgba(201, 168, 76, 0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 85% 50%, rgba(56, 189, 248, 0.04) 0%, transparent 60%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 28px 28px;
+    background-attachment: fixed;
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    color: var(--content);
+    letter-spacing: 0.01em;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 全局扫描线 */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.015) 2px,
+        rgba(0, 0, 0, 0.015) 4px
+    );
+}
+
+body.list {
+    background-color: #000;
+    background-image:
+        radial-gradient(ellipse 100% 60% at 50% -30%, rgba(201, 168, 76, 0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 85% 50%, rgba(56, 189, 248, 0.04) 0%, transparent 60%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 100% 100%, 28px 28px;
+    background-attachment: fixed;
+}
+
+.main,
+.paginator {
+    background: transparent !important;
+}
+
+/* ============================================================
+   HUD STATUS BAR — 顶部系统状态条
+   ============================================================ */
+.hud-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 22px;
+    padding: 0 20px;
+    background: rgba(0, 0, 0, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    color: var(--secondary);
+    overflow: hidden;
+}
+
+.hud-status-left,
+.hud-status-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hud-indicator {
+    position: relative;
+    padding-left: 12px;
+}
+
+/* 状态指示灯 */
+.hud-indicator::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+
+.hud-sys::before {
+    background: #00ff41;
+    box-shadow: 0 0 6px #00ff41;
+    animation: status-pulse 4s ease-in-out infinite;
+}
+
+.hud-comm::before {
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+}
+
+.hud-time::before {
+    background: var(--accent);
+    box-shadow: 0 0 4px var(--accent);
+}
+
+@keyframes status-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.hud-sep {
+    color: rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================================
+   HEADER / NAV — 命令控制栏
+   ============================================================ */
+.nav {
+    background: rgba(0, 0, 0, 0.94);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0 20px;
+}
+
+/* HUD 顶部色条 */
+.nav::before {
+    content: "";
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--accent) 20%,
+        transparent 40%,
+        var(--cyan) 60%,
+        transparent 80%,
+        var(--alert) 95%,
+        transparent 100%
+    );
+    opacity: 0.35;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: calc(var(--nav-width) + var(--gap) * 2);
+    margin: auto;
+    line-height: var(--header-height);
+    padding: 0 var(--gap);
+}
+
+/* ---- 呼号标识 ---- */
+.logo a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.logo a::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: #00ff41;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00ff41, 0 0 20px rgba(0, 255, 65, 0.3);
+    animation: status-pulse 4s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+/* ---- 导航菜单 — 命令按钮 ---- */
+#menu {
+    display: flex;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#menu li {
+    display: flex;
+    align-items: center;
+}
+
+/* 菜单项之间加分隔符 */
+#menu li + li::before {
+    content: "";
+    display: inline-block;
+    width: 1px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.10);
+}
+
+#menu a {
+    padding: 8px 16px;
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--secondary);
+    text-decoration: none;
+    transition: all 0.25s;
+    position: relative;
+}
+
+/* 活动/悬停下划线 */
+#menu a::after {
+    content: "";
+    position: absolute;
+    bottom: 6px;
+    left: 16px;
+    right: 16px;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.25s;
+    box-shadow: 0 0 8px var(--accent);
+}
+
+#menu a:hover {
+    color: var(--accent);
+    background: transparent;
+}
+
+#menu a:hover::after,
+#menu span.active::after {
+    transform: scaleX(1);
+}
+
+#menu span.active {
+    color: var(--accent);
+    position: relative;
+}
+
+#menu span.active::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(1);
+    box-shadow: 0 0 8px var(--accent);
+}
+
+/* ============================================================
+   HOME INFO — 主控显示屏
+   ============================================================ */
+.home-info {
+    background: rgba(255, 255, 255, 0.008);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 52px 44px;
+    margin-bottom: 36px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+/* 角标 — 四角定位符 */
+.home-info::before,
+.home-info::after {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-color: rgba(255, 255, 255, 0.14);
+    border-style: solid;
+}
+
+.home-info::before {
+    top: 12px;
+    left: 12px;
+    border-width: 1px 0 0 1px;
+}
+
+.home-info::after {
+    bottom: 12px;
+    right: 12px;
+    border-width: 0 1px 1px 0;
+}
+
+/* 补充两个角标（左下、右上通过伪元素无法同时四角，用 box-shadow 模拟） */
+.home-info {
+    --corner-offset: 12px;
+}
+
+.home-info .home-info-title {
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+/* 标题前加标识 */
+.home-info .home-info-title::before {
+    content: "[ ";
+    color: rgba(255, 255, 255, 0.2);
+    font-weight: 300;
+}
+
+.home-info .home-info-title::after {
+    content: " ]";
+    color: rgba(255, 255, 255, 0.2);
+    font-weight: 300;
+}
+
+.home-info .entry-content {
+    color: var(--secondary);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+/* ============================================================
+   POST CARDS — 任务日志条目
+   ============================================================ */
+
+/* 分类页标题之上加 SECTION 标记 */
+.page-header {
+    margin-bottom: 28px !important;
+}
+
+.page-header h1 {
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.3rem !important;
+    letter-spacing: 0.06em !important;
+    color: var(--primary) !important;
+}
+
+/* 面包屑 — 终端路径风格 */
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+}
+
+.breadcrumbs a {
+    color: var(--secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumbs a:hover {
+    color: var(--accent);
+}
+
+.breadcrumbs a::before {
+    content: "/";
+    color: rgba(255, 255, 255, 0.2);
+    margin-right: 4px;
+}
+
+.breadcrumbs a:first-child::before {
+    content: "";
+    margin-right: 0;
+}
+
+.breadcrumbs svg {
+    display: none;
+}
+
+/* 用 CSS counter 给卡片编号 */
+main.main {
+    counter-reset: mission-log;
+}
+
+.post-entry {
+    counter-increment: mission-log;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0;
+    padding: 28px 32px 28px 56px;
+    margin-bottom: 10px;
+    backdrop-filter: blur(6px);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 卡片编号 — 左侧任务编号 */
+.post-entry::before {
+    content: "LOG-" counter(mission-log, decimal-leading-zero);
+    position: absolute;
+    left: 16px;
+    top: 28px;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.58rem;
+    color: rgba(255, 255, 255, 0.15);
+    letter-spacing: 0.05em;
+    writing-mode: horizontal-tb;
+    pointer-events: none;
+    transition: color 0.35s;
+}
+
+/* 左侧装饰线 */
+.post-entry {
+    border-left: 1px solid transparent;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-entry:hover {
+    border-color: rgba(201, 168, 76, 0.30);
+    border-left-color: var(--accent);
+    background: rgba(255, 255, 255, 0.018);
+    box-shadow:
+        inset 0 0 80px rgba(201, 168, 76, 0.015),
+        0 0 40px rgba(0, 0, 0, 0.6);
+    transform: translateX(3px);
+}
+
+.post-entry:hover::before {
+    color: rgba(201, 168, 76, 0.35);
+}
+
+/* 扫描线动画 */
+@keyframes scan-line {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(600%); }
+}
+
+.post-entry .entry-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    pointer-events: none;
+    top: 0;
+    animation: scan-line 3s linear infinite;
+}
+
+.post-entry:hover .entry-link::after {
+    opacity: 0.5;
+}
+
+/* ---- 卡片标题 ---- */
+.entry-header h2 {
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin: 0;
+}
+
+.entry-header h2 a {
+    color: var(--primary);
+    transition: color 0.2s;
+    text-decoration: none;
+}
+
+.entry-header h2 a:hover {
+    color: var(--accent);
+}
+
+/* 摘要 */
+.entry-content {
+    color: var(--secondary);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    margin: 8px 0 0;
+}
+
+/* ---- 卡片底部 — 遥测数据 ---- */
+.post-entry .entry-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.68rem;
+    color: var(--secondary);
+    letter-spacing: 0.04em;
+}
+
+.post-entry time {
+    font-family: inherit;
+    color: var(--secondary);
+}
+
+.post-entry time::before {
+    content: "T+";
+    color: var(--cyan);
+    font-size: 0.6rem;
+    margin-right: 3px;
+}
+
+/* 阅读时间和字数格式 */
+.post-entry .entry-footer span {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ============================================================
+   ARTICLE PAGE — 任务简报
+   ============================================================ */
+.post-header {
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.post-title {
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+/* 文章标题前缀 */
+.post-title::before {
+    content: "BRIEFING: ";
+    display: block;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.6rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+/* 元数据 — 数据表单风格 */
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.012);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.7rem;
+    color: var(--secondary);
+    letter-spacing: 0.04em;
+}
+
+.post-meta time::before {
+    content: "T+";
+    color: var(--cyan);
+    margin-right: 3px;
+}
+
+/* ---- 正文排版 ---- */
+.post-content {
+    color: var(--content);
+    line-height: 1.8;
+}
+
+/* H2 章节标题 */
+.post-content h2 {
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-top: 3em;
+    margin-bottom: 0.8em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    letter-spacing: 0.04em;
+    color: var(--primary);
+}
+
+.post-content h2::before {
+    content: "> ";
+    color: var(--accent);
+    font-weight: 700;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+}
+
+/* H3 */
+.post-content h3 {
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+}
+
+/* 链接 */
+.post-content a {
+    color: var(--cyan);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    transition: all 0.2s;
+}
+
+.post-content a:hover {
+    border-bottom-color: var(--cyan);
+    text-shadow: 0 0 10px var(--cyan-glow);
+}
+
+/* ---- 代码块 — 数据终端 ---- */
+.post-content pre {
+    border-radius: 0;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: #020202 !important;
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+    position: relative;
+    margin: 1.5em 0;
+}
+
+.post-content pre::before {
+    content: "SYSLOG://DATA-STREAM";
+    display: block;
+    color: rgba(201, 168, 76, 0.25);
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.15em;
+    padding: 8px 16px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.post-content :not(pre) > code {
+    background: rgba(201, 168, 76, 0.06);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 0;
+    font-size: 0.84em;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    border: 1px solid rgba(201, 168, 76, 0.10);
+}
+
+/* 引用块 */
+.post-content blockquote {
+    border-left: 1px solid var(--accent);
+    background: rgba(201, 168, 76, 0.02);
+    padding: 14px 22px;
+    border-radius: 0;
+    color: var(--secondary);
+    font-style: normal;
+    letter-spacing: 0.03em;
+}
+
+/* 表格 */
+.post-content table {
+    border-collapse: collapse;
+}
+
+.post-content th {
+    background: rgba(201, 168, 76, 0.04);
+    color: var(--accent);
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-size: 0.8rem;
+}
+
+.post-content td,
+.post-content th {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 10px 18px;
+}
+
+.post-content img {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================================
+   ARTICLE FOOTER — 标签/导航
+   ============================================================ */
+.post-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 标签 — 系统指示灯 */
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+}
+
+.post-tags li {
+    display: inline-block;
+}
+
+.post-tags a,
+.post-categories a {
+    display: inline-block;
+    background: transparent;
+    color: var(--secondary);
+    padding: 4px 14px;
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.post-tags a::before,
+.post-categories a::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    margin-right: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 6px var(--accent);
+}
+
+.post-tags a:hover,
+.post-categories a:hover {
+    background: rgba(201, 168, 76, 0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 16px rgba(201, 168, 76, 0.12);
+}
+
+/* ============================================================
+   POST NAVIGATION
+   ============================================================ */
+.paginav {
+    display: flex;
+    gap: 0;
+}
+
+.paginav a {
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-weight: 500;
+    transition: all 0.25s;
+    letter-spacing: 0.04em;
+    font-size: 0.82rem;
+    padding: 16px 22px;
+    color: var(--secondary);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.paginav .title {
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--secondary);
+    text-transform: uppercase;
+}
+
+.paginav a:hover {
+    border-color: var(--accent);
+    background: rgba(201, 168, 76, 0.06);
+    color: var(--accent);
+    box-shadow: 0 0 24px rgba(201, 168, 76, 0.10);
+}
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+.pagination {
+    display: flex;
+    margin-top: 20px;
+}
+
+.pagination a {
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 8px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--secondary);
+    text-decoration: none;
+    transition: all 0.25s;
+}
+
+.pagination a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.06);
+}
+
+/* ============================================================
+   SEARCH PAGE — 数据查询终端
+   ============================================================ */
+#searchbox {
+    margin-top: 8px;
+}
+
+#searchbox input {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: var(--primary);
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    padding: 14px 18px;
+    border-radius: 0;
+    letter-spacing: 0.04em;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+#searchbox input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 24px rgba(201, 168, 76, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+#searchbox input:disabled {
+    background: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.06);
+    color: var(--secondary);
+}
+
+.searchResults {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.searchResults li {
+    background: rgba(255, 255, 255, 0.01) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 0 !important;
+    padding: 16px 18px !important;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.searchResults li::before {
+    content: ">";
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    transition: color 0.3s;
+}
+
+.searchResults li:hover {
+    border-color: var(--accent) !important;
+    background: rgba(201, 168, 76, 0.04) !important;
+    transform: translateX(3px);
+}
+
+.searchResults li:hover::before {
+    color: var(--accent);
+}
+
+/* ============================================================
+   TAXONOMY PAGES — 分类/标签仪表盘
+   ============================================================ */
+
+/* 统计栏 — 顶部数据概览 */
+.terms-tags {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 0;
+    margin-top: 12px;
+    list-style: none;
+}
+
+.terms-tags::before {
+    content: "";
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.15);
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.terms-tags li {
+    list-style: none;
+    display: flex;
+}
+
+.terms-tags a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 18px;
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    color: var(--primary);
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.012);
+    backdrop-filter: blur(6px);
+    transition: all 0.3s;
+    position: relative;
+}
+
+/* 左侧分类指示灯 */
+.terms-tags a::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 12px;
+    box-shadow: 0 0 8px var(--accent);
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+
+/* 计数 — 数据读数 */
+.terms-tags a sup {
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--secondary);
+    letter-spacing: 0.06em;
+    margin-left: auto;
+    transition: all 0.3s;
+}
+
+.terms-tags a sup strong {
+    font-weight: 400;
+}
+
+/* 悬停 */
+.terms-tags a:hover {
+    border-color: var(--accent);
+    background: rgba(201, 168, 76, 0.06);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(201, 168, 76, 0.08);
+    transform: translateX(2px);
+}
+
+.terms-tags a:hover::before {
+    box-shadow: 0 0 14px var(--accent), 0 0 24px var(--accent-glow);
+}
+
+.terms-tags a:hover sup {
+    color: var(--accent);
+}
+
+/* 响应式 */
+@media screen and (max-width: 768px) {
+    .terms-tags {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+    }
+
+    .terms-tags a {
+        padding: 12px 14px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================================
+   TOC — 可折叠数据面板
+   ============================================================ */
+details.toc {
+    background: rgba(255, 255, 255, 0.012) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 0 !important;
+    margin-bottom: var(--content-gap);
+    padding: 0;
+}
+
+details.toc summary {
+    padding: 12px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--secondary);
+    text-transform: uppercase;
+    user-select: none;
+    transition: color 0.25s;
+}
+
+details.toc summary::before {
+    content: "[+]";
+    color: var(--accent);
+    font-size: 0.7rem;
+}
+
+details.toc[open] summary::before {
+    content: "[-]";
+}
+
+details.toc summary:hover {
+    color: var(--accent);
+}
+
+details.toc .inner {
+    margin: 0;
+    padding: 8px 18px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+details.toc .inner ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+details.toc .inner li {
+    padding: 4px 0;
+}
+
+details.toc .inner a {
+    color: var(--secondary);
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+details.toc .inner a::before {
+    content: ">";
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 0.65rem;
+}
+
+details.toc .inner a:hover {
+    color: var(--accent);
+}
+
+/* ============================================================
+   BACK TO TOP — 返回轨道
+   ============================================================ */
+.top-link {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 0 !important;
+    width: 2.2rem !important;
+    height: 2.2rem !important;
+    padding: 6px !important;
+    bottom: 2rem !important;
+    right: 1.5rem !important;
+    box-shadow: none !important;
+    transition: all 0.3s !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.top-link svg {
+    filter: none !important;
+    stroke: var(--secondary);
+    transition: stroke 0.3s;
+}
+
+.top-link:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 16px rgba(201, 168, 76, 0.15) !important;
+}
+
+.top-link:hover svg {
+    stroke: var(--accent);
+}
+
+.top-link.hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+    padding: 24px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--secondary);
+    font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+}
+
+.footer a {
+    color: var(--accent);
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201, 168, 76, 0.35); }
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
+::selection {
+    background: rgba(201, 168, 76, 0.30);
+    color: #fff;
+    text-shadow: 0 0 4px rgba(201, 168, 76, 0.3);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .post-entry .entry-link::after { animation: none; }
+    .hud-sys::before { animation: none; }
+    * { transition-duration: 0ms !important; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media screen and (max-width: 768px) {
+    .hud-status-bar {
+        padding: 0 10px;
+        font-size: 0.5rem;
+    }
+
+    .hud-comm {
+        display: none;
+    }
+
+    .hud-sep {
+        display: none;
+    }
+
+    .home-info {
+        padding: 28px 18px;
+    }
+
+    .home-info .home-info-title {
+        font-size: 1.1rem;
+    }
+
+    .post-entry {
+        padding: 20px 16px 20px 40px;
+    }
+
+    .post-entry::before {
+        left: 8px;
+        top: 20px;
+        font-size: 0.5rem;
+    }
+
+    .entry-header h2 {
+        font-size: 1rem;
+    }
+
+    .post-title {
+        font-size: 1.2rem;
+    }
+
+    .post-meta {
+        gap: 6px 12px;
+        padding: 10px 12px;
+        font-size: 0.65rem;
+    }
+
+    #menu a {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+
+    #menu li + li::before {
+        height: 10px;
+    }
+}

@@ -1,0 +1,16 @@
+<!-- HUD 时钟 -->
+<script>
+(function() {
+    var clock = document.getElementById('hud-clock');
+    if (!clock) return;
+    function tick() {
+        var now = new Date();
+        var h = String(now.getHours()).padStart(2, '0');
+        var m = String(now.getMinutes()).padStart(2, '0');
+        var s = String(now.getSeconds()).padStart(2, '0');
+        clock.textContent = h + ':' + m + ':' + s + ' ZULU';
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>
