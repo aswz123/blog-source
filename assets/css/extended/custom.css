@@ -62,13 +62,19 @@
 /* ============================================================
    BASE — 深空背景 + 精密点阵 + 光晕
    ============================================================ */
+html {
+    font-size: 17px;
+}
+
 body {
     background-color: #000;
     background-image:
         radial-gradient(ellipse 100% 60% at 50% -30%, rgba(201, 168, 76, 0.06) 0%, transparent 70%),
         radial-gradient(ellipse 50% 50% at 85% 50%, rgba(56, 189, 248, 0.04) 0%, transparent 60%),
-        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 28px 28px;
+        radial-gradient(ellipse 40% 40% at 15% 85%, rgba(201, 168, 76, 0.03) 0%, transparent 60%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.05) 0.5px, transparent 0.5px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 113px 113px;
     background-attachment: fixed;
     font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
     color: var(--content);
@@ -94,13 +100,25 @@ body::before {
     );
 }
 
+/* 视口框架 — HUD 边角标线 */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 14px;
+    z-index: 1;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.012);
+}
+
 body.list {
     background-color: #000;
     background-image:
         radial-gradient(ellipse 100% 60% at 50% -30%, rgba(201, 168, 76, 0.06) 0%, transparent 70%),
         radial-gradient(ellipse 50% 50% at 85% 50%, rgba(56, 189, 248, 0.04) 0%, transparent 60%),
-        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px) !important;
-    background-size: 100% 100%, 100% 100%, 28px 28px;
+        radial-gradient(ellipse 40% 40% at 15% 85%, rgba(201, 168, 76, 0.03) 0%, transparent 60%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.05) 0.5px, transparent 0.5px) !important;
+    background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 113px 113px;
     background-attachment: fixed;
 }
 
@@ -379,7 +397,7 @@ body.list {
 
 .home-info .entry-content {
     color: var(--secondary);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     letter-spacing: 0.05em;
 }
 
@@ -535,7 +553,7 @@ main.main {
 /* 摘要 */
 .entry-content {
     color: var(--secondary);
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     line-height: 1.7;
     margin: 8px 0 0;
 }
@@ -629,6 +647,7 @@ main.main {
 /* ---- 正文排版 ---- */
 .post-content {
     color: var(--content);
+    font-size: 1rem;
     line-height: 1.8;
 }
 
@@ -655,7 +674,7 @@ main.main {
 /* H3 */
 .post-content h3 {
     font-family: "DengXian", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
-    font-size: 1.05rem;
+    font-size: 1.12rem;
     font-weight: 600;
     color: var(--accent);
     letter-spacing: 0.03em;
@@ -814,7 +833,7 @@ main.main {
     font-weight: 500;
     transition: all 0.25s;
     letter-spacing: 0.04em;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     padding: 16px 22px;
     color: var(--secondary);
     text-decoration: none;
