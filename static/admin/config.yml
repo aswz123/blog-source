@@ -16,7 +16,7 @@ collections:
     label: 文章
     label_singular: 文章
     folder: content/posts
-    path: "{{slug}}"
+    path: "{{slug}}/index"
     create: true
     slug: "{{slug}}"
     editor:
@@ -40,12 +40,31 @@ collections:
         hint: 取消勾选后，推送代码即发布到网站
       - label: 分类
         name: categories
-        widget: list
+        widget: select
+        multiple: true
         required: false
+        options:
+          - 技术
+          - 生活
+          - 感想
+          - 教程
+        hint: 一篇文章通常选一个分类
       - label: 标签
         name: tags
-        widget: list
+        widget: select
+        multiple: true
         required: false
+        options:
+          - 博客
+          - Hugo
+          - AI
+          - 前端
+          - 后端
+          - 工具
+          - GitHub
+          - 域名
+          - 思考
+          - 随笔
       - label: 摘要
         name: summary
         widget: text
