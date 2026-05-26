@@ -1,0 +1,106 @@
+{{- if and site.Params.ShowRelatedContent .IsPage }}
+{{- $related := site.RegularPages.Related . | first 3 }}
+{{- with $related }}
+<div class="related-posts">
+  <h3 class="related-title">{{ i18n "related_posts" | default "相关文章" }}</h3>
+  <div class="related-grid">
+  {{- range . }}
+    <a class="related-card" href="{{ .RelPermalink }}">
+      {{- with .Params.cover.image }}
+      <div class="related-card-img">
+        {{- if (ne .relative true) }}
+        <img src="{{ . | absURL }}" loading="lazy" alt="">
+        {{- else }}
+        <img src="{{ (path.Join $.RelPermalink . ) | absURL }}" loading="lazy" alt="">
+        {{- end }}
+      </div>
+      {{- end }}
+      <div class="related-card-body">
+        <span class="related-card-title">{{ .Title }}</span>
+        <span class="related-card-meta">
+          <time datetime="{{ .PublishDate.Format "2006-01-02" }}">{{ .PublishDate.Format "2006-01-02" }}</time>
+          {{- if site.Params.ShowReadingTime }} · {{ .ReadingTime }} min{{- end }}
+        </span>
+      </div>
+    </a>
+  {{- end }}
+  </div>
+</div>
+
+<style>
+.related-posts {
+  margin: 3rem 0 1rem;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+.related-title {
+  font-size: 0.95rem;
+  color: #c9a84c;
+  margin: 0 0 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.related-title::before {
+  content: "[ ";
+  color: rgba(201,168,76,0.5);
+}
+.related-title::after {
+  content: " ]";
+  color: rgba(201,168,76,0.5);
+}
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+.related-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.3);
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.related-card:hover {
+  border-color: rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.05);
+}
+.related-card-img {
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.related-card-img img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+.related-card-title {
+  font-size: 0.88rem;
+  color: #e0e0e0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.related-card-meta {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  margin-top: 0.35rem;
+  font-family: "Cascadia Code", Consolas, monospace;
+}
+@media (max-width: 768px) {
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{{- end }}
+{{- end }}

@@ -1,0 +1,22 @@
+{{- /* DNS 预解析 — 未来 CDN 和外部资源 */ -}}
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+
+{{- /* 百度站长平台验证（如需） */ -}}
+{{- with site.Params.analytics.baidu_site_verification }}
+<meta name="baidu-site-verification" content="{{ . }}">
+{{- end }}
+
+{{- /* Canonical URL — 页面级 */ -}}
+{{- if .IsPage }}
+  {{- with .Params.canonicalURL }}
+<link rel="canonical" href="{{ . }}">
+  {{- else }}
+<link rel="canonical" href="{{ .Permalink }}">
+  {{- end }}
+{{- end }}
+
+{{- /* 自动生成 description */ -}}
+{{- if and (not .Description) .IsPage }}
+<meta name="description" content="{{ .Summary | plainify | htmlUnescape | truncate 160 }}">
+{{- end }}

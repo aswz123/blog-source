@@ -7,7 +7,7 @@ theme: "PaperMod"
 # 每页文章数
 paginate: 10
 
-# 启用 RSS
+# 启用 RSS / Robots / Sitemap
 enableRobotsTXT: true
 enableEmoji: true
 
@@ -24,7 +24,27 @@ markup:
     style: "dracula"
     noClasses: false
 
+# 相关内容推荐配置
+related:
+  indices:
+    - name: "keywords"
+      weight: 100
+    - name: "tags"
+      weight: 80
+    - name: "categories"
+      weight: 60
+    - name: "date"
+      weight: 10
+  threshold: 80
+  toLower: true
+
 params:
+  # SEO
+  description: "记录技术、生活和思考。一个关于编程、前端和独立开发的个人博客。"
+  author: "aswz123"
+  images:
+    - "/images/og-default.svg"
+
   # 首页信息
   homeInfoParams:
     Title: "欢迎来到我的博客"
@@ -41,11 +61,21 @@ params:
   ShowBreadCrumbs: true
   ShowPostNavLinks: true
   ShowCodeCopyButtons: true
+  ShowShareButtons: true
+  ShowRelatedContent: true
+  ShowFullTextinRSS: true
   disableThemeToggle: true
   defaultTheme: "dark"
 
+  # Schema.org 结构化数据
+  schema:
+    publisherType: "Person"
+    sameAs:
+      - "https://github.com/aswz123"
+
   assets:
     disableHLJS: true
+    disableFingerprinting: false
 
   # 搜索
   fuseOpts:

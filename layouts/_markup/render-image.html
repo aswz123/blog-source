@@ -1,0 +1,38 @@
+{{- $u := urls.Parse .Destination -}}
+{{- $src := $u.String -}}
+{{- $alt := .Text -}}
+{{- $title := .Title | transform.HTMLEscape -}}
+{{- $attrs := .Attributes -}}
+
+{{- if not $u.IsAbs -}}
+  {{- $path := strings.TrimPrefix "./" $u.Path }}
+  {{- with or (.PageInner.Resources.Get $path) (resources.Get $path) -}}
+    {{- $img := . -}}
+    {{- $src = $img.RelPermalink -}}
+    {{- with $u.RawQuery -}}
+      {{- $src = printf "%s?%s" $src . -}}
+    {{- end -}}
+    {{- with $u.Fragment -}}
+      {{- $src = printf "%s#%s" $src . -}}
+    {{- end -}}
+
+    {{- /* WebP conversion for JPEG/PNG page resources */ -}}
+    {{- if in (slice "jpg" "jpeg" "png") $img.MediaType.SubType -}}
+      {{- $webp := $img.Process "webp q82" -}}
+      {{- $imgAttrs := merge $attrs (dict "alt" $alt "title" $title "loading" "lazy" "decoding" "async") -}}
+<picture>
+  <source srcset="{{ $webp.RelPermalink }}" type="image/webp">
+  <img{{ range $k, $v := $imgAttrs }}{{ if $v }}{{ printf " %s=%q" $k $v | safeHTMLAttr }}{{ end }}{{ end }}>
+</picture>
+    {{- else -}}
+      {{- $imgAttrs := merge $attrs (dict "alt" $alt "src" $src "title" $title "loading" "lazy" "decoding" "async") -}}
+<img{{ range $k, $v := $imgAttrs }}{{ if $v }}{{ printf " %s=%q" $k $v | safeHTMLAttr }}{{ end }}{{ end }}>
+    {{- end -}}
+  {{- else -}}
+    {{- $imgAttrs := merge $attrs (dict "alt" $alt "src" $src "title" $title "loading" "lazy" "decoding" "async") -}}
+<img{{ range $k, $v := $imgAttrs }}{{ if $v }}{{ printf " %s=%q" $k $v | safeHTMLAttr }}{{ end }}{{ end }}>
+  {{- end -}}
+{{- else -}}
+  {{- $imgAttrs := merge $attrs (dict "alt" $alt "src" $src "title" $title "loading" "lazy" "decoding" "async") -}}
+<img{{ range $k, $v := $imgAttrs }}{{ if $v }}{{ printf " %s=%q" $k $v | safeHTMLAttr }}{{ end }}{{ end }}>
+{{- end -}}
